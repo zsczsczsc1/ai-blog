@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的个人博客 - AI 内容生成</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background: #f5f7fa;
+            color: #333;
+            line-height: 1.7;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 0 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 16px;
+            color: #718096;
+        }
+
+        .input-card {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            margin-bottom: 30px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 14px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 15px;
+            resize: none;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        textarea:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-generate {
+            background: #3b82f6;
+            color: white;
+            flex: 1;
+        }
+
+        .btn-generate:hover {
+            background: #2563eb;
+        }
+
+        .btn-clear {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .btn-clear:hover {
+            background: #e2e8f0;
+        }
+
+        .btn-save {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-save:hover {
+            background: #059669;
+        }
+
+        .btn-download {
+            background: #8b5cf6;
+            color: white;
+        }
+
+        .btn-download:hover {
+            background: #7c3aed;
+        }
+
+        .result-card {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            min-height: 200px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .loading {
+            color: #64748b;
+            font-style: italic;
+        }
+
+        /* 历史文章列表样式 */
+        .article-list-card {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            margin-top: 30px;
+        }
+
+        .article-item {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .article-item:last-child {
+            border-bottom: none;
+        }
+
+        .article-title {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .article-time {
+            font-size: 12px;
+            color: #718096;
+        }
+
+        .article-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-left: 6px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            font-size: 14px;
+            color: #94a3b8;
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 24px;
+            }
+            .btn-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>我的个人博客 · AI 内容生成</h1>
+            <p>输入指令，让智谱 AI 为你创作博客文章、简介、技术笔记</p>
+        </div>
+
+        <div class="input-card">
+            <textarea id="prompt" placeholder="例如：写一篇简约风格的Python入门技术博客、写个人博客自我介绍、写一篇前端学习心得..."></textarea>
+            <div class="btn-group">
+                <button class="btn-generate" onclick="startGenerate()">开始生成</button>
+                <button class="btn-clear" onclick="clearAll()">清空内容</button>
+                <button class="btn-save" onclick="saveArticle()">保存文章</button>
+                <button class="btn-download" onclick="downloadArticle()">下载文章</button>
+            </div>
+        </div>
+
+        <div class="result-card" id="result">
+            <div class="loading">AI 内容将在这里逐字显示...</div>
+        </div>
+
+        <!-- 历史文章列表 -->
+        <div class="article-list-card">
+            <h3 style="margin-bottom: 20px; color: #2d3748;">📚 我的文章历史</h3>
+            <div id="articleList"></div>
+        </div>
+
+        <div class="footer">
+            基于智谱 AI GLM-4-Flash 免费接口 | 个人博客专用
+        </div>
+    </div>
+
+    <script>
+        let eventSource = null;
+
+        // 生成AI内容 —— 只改了这里！适配公网！
+        function startGenerate() {
+            let prompt = document.getElementById("prompt").value.trim();
+            let result = document.getElementById("result");
+            
+            if (!prompt) {
+                alert("请输入生成内容！");
+                return;
+            }
+
+            result.innerHTML = '<div class="loading">AI 正在思考中...</div>';
+
+            if (eventSource) {
+                eventSource.close();
+            }
+
+            // ✅ 公网访问用相对路径，本地也能正常运行
+            let url = `/api/ai/stream?q=${encodeURIComponent(prompt)}`;
+            eventSource = new EventSource(url);
+
+            eventSource.onopen = function () {
+                result.innerHTML = "";
+            };
+
+            eventSource.onmessage = function (e) {
+                try {
+                    let data = JSON.parse(e.data);
+                    let text = data.choices[0].delta.content || "";
+                    result.innerText += text;
+                } catch (err) { }
+            };
+
+            eventSource.onerror = function () {
+                eventSource.close();
+            };
+        }
+
+        // 清空内容
+        function clearAll() {
+            document.getElementById("result").innerText = "";
+            document.getElementById("prompt").value = "";
+            if (eventSource) eventSource.close();
+        }
+
+        // 保存文章到本地
+        function saveArticle() {
+            const content = document.getElementById("result").innerText.trim();
+            const promptText = document.getElementById("prompt").value.trim();
+            
+            if (!content || !promptText) {
+                alert("请先生成文章内容！");
+                return;
+            }
+
+            const articles = JSON.parse(localStorage.getItem("blogArticles") || "[]");
+            articles.push({
+                id: Date.now(),
+                title: promptText,
+                content: content,
+                time: new Date().toLocaleString()
+            });
+
+            localStorage.setItem("blogArticles", JSON.stringify(articles));
+            alert("✅ 文章保存成功！");
+            loadArticleList();
+        }
+
+        // 下载文章为MD文件
+        function downloadArticle() {
+            const content = document.getElementById("result").innerText.trim();
+            if (!content) {
+                alert("没有可下载的内容！");
+                return;
+            }
+
+            const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `博客文章_${new Date().getTime()}.md`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // 加载文章列表
+        function loadArticleList() {
+            const list = document.getElementById("articleList");
+            const articles = JSON.parse(localStorage.getItem("blogArticles") || "[]");
+            
+            if (articles.length === 0) {
+                list.innerHTML = "<p style='color:#718096;'>暂无保存的文章</p>";
+                return;
+            }
+
+            list.innerHTML = "";
+            articles.forEach(article => {
+                const div = document.createElement("div");
+                div.className = "article-item";
+                div.innerHTML = `
+                    <div>
+                        <div class="article-title">${article.title}</div>
+                        <div class="article-time">${article.time}</div>
+                    </div>
+                    <div>
+                        <button class="article-btn" style="background:#3b82f6;color:white" onclick="loadArticle(${article.id})">查看</button>
+                        <button class="article-btn" style="background:#ef4444;color:white" onclick="deleteArticle(${article.id})">删除</button>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        // 加载单篇文章
+        function loadArticle(id) {
+            const articles = JSON.parse(localStorage.getItem("blogArticles") || "[]");
+            const article = articles.find(item => item.id === id);
+            if (article) {
+                document.getElementById("prompt").value = article.title;
+                document.getElementById("result").innerText = article.content;
+            }
+        }
+
+        // 删除文章
+        function deleteArticle(id) {
+            if (!confirm("确定删除这篇文章？")) return;
+            let articles = JSON.parse(localStorage.getItem("blogArticles") || "[]");
+            articles = articles.filter(item => item.id !== id);
+            localStorage.setItem("blogArticles", JSON.stringify(articles));
+            loadArticleList();
+        }
+
+        window.onload = loadArticleList;
+    </script>
+</body>
+</html>
