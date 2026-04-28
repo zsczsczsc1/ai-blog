@@ -225,7 +225,7 @@
     <script>
         let eventSource = null;
 
-        // 生成AI内容 —— 只改了这里！适配公网！
+        // 生成AI内容
         function startGenerate() {
             let prompt = document.getElementById("prompt").value.trim();
             let result = document.getElementById("result");
@@ -241,8 +241,8 @@
                 eventSource.close();
             }
 
-            // ✅ 公网访问用相对路径，本地也能正常运行
-            let url = `/api/ai/stream?q=${encodeURIComponent(prompt)}`;
+            // ✅ 已修改为 Netlify 适配地址！！！
+            let url = `/.netlify/functions/chat?q=${encodeURIComponent(prompt)}`;
             eventSource = new EventSource(url);
 
             eventSource.onopen = function () {
